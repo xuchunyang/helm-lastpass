@@ -78,7 +78,7 @@
                 ('auto "--sync=auto")
                 ('now  "--sync=now")
                 ('no   "--sync=no")
-                (_     (error "invalid argument '%s'" sync))))
+                (_     (error "Invalid argument '%s'" sync))))
         (fields (concat
                  "--fields="
                  (mapconcat #'identity
