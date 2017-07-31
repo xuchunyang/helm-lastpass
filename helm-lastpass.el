@@ -3,6 +3,7 @@
 ;; Copyright (C) 2017  Chunyang Xu
 
 ;; Author: Chunyang Xu <mail@xuchunyang.me>
+;; URL: https://github.com/xuchunyang/helm-lastpass
 ;; Package-Requires: ((emacs "24.1") (helm-core "2.8.1") (csv "2.1"))
 ;; Keywords: LastPass
 ;; Version: 0
