@@ -48,7 +48,7 @@
 (defcustom helm-lastpass-cli "lpass"
   "The program name of the LastPass command line tool."
   :type 'string
-  :group 'lastpass)
+  :group 'helm-lastpass)
 
 (defun helm-lastpass-cli ()
   (executable-find helm-lastpass-cli))
