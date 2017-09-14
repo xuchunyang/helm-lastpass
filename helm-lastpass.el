@@ -59,7 +59,8 @@
   :group 'helm-lastpass)
 
 (defun helm-lastpass-cli ()
-  (executable-find helm-lastpass-cli))
+  (or (executable-find helm-lastpass-cli)
+      (error "Error: `lpass' is not found, please install it first")))
 
 (defun helm-lastpass-logged-in-p ()
   (zerop (call-process (helm-lastpass-cli) nil nil nil "status")))
