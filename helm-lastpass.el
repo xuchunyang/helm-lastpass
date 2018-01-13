@@ -4,7 +4,7 @@
 
 ;; Author: Xu Chunyang <mail@xuchunyang.me>
 ;; Homepage: https://github.com/xuchunyang/helm-lastpass
-;; Package-Requires: ((emacs "24.4") (helm-core "2.0") (csv "2.1"))
+;; Package-Requires: ((emacs "25.1") (helm-core "2.0") (csv "2.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -70,36 +70,49 @@
 
 (defun helm-lastpass-export (&optional sync)
   "Return a list of alist which contains all account information."
-  (let ((sync (pcase sync
-                (`nil   "--sync=auto")
-                (`auto "--sync=auto")
-                (`now  "--sync=now")
-                (`no   "--sync=no")
-                (_     (error "Invalid argument '%s'" sync))))
-        (fields (concat
-                 "--fields="
-                 (mapconcat #'identity
-                            '("id"
-                              "url"
-                              "username"
-                              "password"
-                              "extra"
-                              "name"
-                              "fav"
-                              "id"
-                              "grouping"
-                              "group"
-                              "fullname"
-                              "last_touch"
-                              "last_modified_gmt"
-                              "attachpresent")
-                            ","))))
+  (let* ((sync (pcase sync
+                 (`nil   "--sync=auto")
+                 (`auto "--sync=auto")
+                 (`now  "--sync=now")
+                 (`no   "--sync=no")
+                 (_     (error "Invalid argument '%s'" sync))))
+         (fields (concat
+                  "--fields="
+                  (mapconcat #'identity
+                             '("id"
+                               "url"
+                               "username"
+                               "password"
+                               "extra"
+                               "name"
+                               "fav"
+                               "id"
+                               "grouping"
+                               "group"
+                               "fullname"
+                               "last_touch"
+                               "last_modified_gmt"
+                               "attachpresent")
+                             ",")))
+         (args (list "export" "--color=never" sync fields)))
     (with-temp-buffer
       (message "helm-lastpass: Retrieving data...")
-      (if (zerop (call-process (helm-lastpass-cli) nil t nil "export" "--color=never" sync fields))
+      (if (zerop (apply #'call-process (helm-lastpass-cli) nil t nil args))
           (progn
             (message "helm-lastpass: Retrieving data...done")
-            (csv-parse-buffer t))
+            (let ((list-of-alist (csv-parse-buffer t)))
+              (mapcar
+               (lambda (alist)
+                 (mapcar
+                  (pcase-lambda (`(,field . ,value))
+                    ;; Strip 
+                    (when (and (string-suffix-p "" field)
+                               (string-suffix-p "" value))
+                      (setq field (substring field 0 -1)
+                            value (substring value 0 -1)))
+                    (cons (intern field) value))
+                  alist))
+               list-of-alist)))
         (error "%s" (buffer-string))))))
 
 ;;;###autoload
@@ -112,30 +125,30 @@
         (helm-build-sync-source "LastPass"
           :candidates
           (lambda ()
-            (mapcar (lambda (item)
-                      (cons (cdr (assoc "fullname" item))
-                            item))
-                    (helm-lastpass-export)))
+            (mapcar
+             (lambda (alist)
+               (cons (alist-get 'fullname alist) alist))
+             (helm-lastpass-export)))
           :action
           ;; TODO Change the order & use a variable for this
           '(("Visit site" .
              (lambda (candidate)
-               (browse-url (cdr (assoc "url" candidate)))))
+               (browse-url (alist-get 'url candidate))))
             ("Copy username" .
              (lambda (candidate)
-               (let ((username (cdr (assoc "username" candidate))))
+               (let ((username (alist-get 'username candidate)))
                  (unless (string= "" username)
                    (kill-new username)
                    (message "Copied: %s" username)))))
             ("Copy password" .
              (lambda (candidate)
-               (let ((password (cdr (assoc "password" candidate))))
+               (let ((password (alist-get 'password candidate)))
                  (unless (string= "" password)
                    (kill-new password)
                    (message "Copied: %s" password)))))
             ("Copy URL" .
              (lambda (candidate)
-               (let ((url (cdr (assoc "url" candidate))))
+               (let ((url (alist-get 'url candidate)))
                  (kill-new url)
                  (message "Copied: %s" url))))))
         :buffer "*helm LastPass*"))
