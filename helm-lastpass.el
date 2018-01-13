@@ -29,6 +29,7 @@
 (require 'helm)
 (require 'auth-source)
 (require 'cl-lib)
+(require 'subr-x)
 
 (defgroup helm-lastpass nil
   "Helm interface of LastPass."
@@ -38,6 +39,41 @@
   "The program name of the LastPass command line tool."
   :type 'string
   :group 'helm-lastpass)
+
+(defcustom helm-lastpass-actions
+  '(("Copy password" . helm-lastpass-copy-password)
+    ("Copy username" . helm-lastpass-copy-username)
+    ("Copy URL"      . helm-lastpass-copy-url)
+    ("Browse URL"    . helm-lastpass-browse-url))
+  "Actions for `helm-lastpass'."
+  :group 'helm-lastpass
+  :type '(alist :key-type string :value-type function))
+
+(defun helm-lastpass-copy-password (al)
+  (if-let ((password (alist-get 'password al)))
+      (progn
+        (kill-new password)
+        (message "Copied: %s" password))
+    (user-error "No password for this entry")))
+
+(defun helm-lastpass-copy-username (al)
+  (if-let ((username (alist-get 'username al)))
+      (progn
+        (kill-new username)
+        (message "Copied: %s" username))
+    (user-error "No username for this entry")))
+
+(defun helm-lastpass-copy-url (al)
+  (if-let ((url (alist-get 'url al)))
+      (progn
+        (kill-new url)
+        (message "Copied: %s" url))
+    (user-error "No URL for this entry")))
+
+(defun helm-lastpass-browse-url (al)
+  (if-let ((url (alist-get 'url al)))
+      (browse-url url)
+    (user-error "No URL for this entry")))
 
 (defun helm-lastpass-cli ()
   (or (executable-find helm-lastpass-cli)
@@ -110,10 +146,24 @@
                                (string-suffix-p "" value))
                       (setq field (substring field 0 -1)
                             value (substring value 0 -1)))
+                    (when (string= "" value)
+                      (setq value nil))
                     (cons (intern field) value))
                   alist))
                list-of-alist)))
         (error "%s" (buffer-string))))))
+
+(defun helm-lastpass-candidates ()
+  (mapcar
+   (lambda (alist)
+     (cons (alist-get 'fullname alist) alist))
+   (helm-lastpass-export)))
+
+(defvar helm-lastpass-source
+  (helm-build-sync-source "LastPass"
+    :candidates #'helm-lastpass-candidates
+    :action helm-lastpass-actions)
+  "Source for `helm-lastpass'.")
 
 ;;;###autoload
 (defun helm-lastpass ()
@@ -121,36 +171,7 @@
   (interactive)
   (unless (helm-lastpass-logged-in-p)
     (helm-lastpass-login))
-  (helm :sources
-        (helm-build-sync-source "LastPass"
-          :candidates
-          (lambda ()
-            (mapcar
-             (lambda (alist)
-               (cons (alist-get 'fullname alist) alist))
-             (helm-lastpass-export)))
-          :action
-          ;; TODO Change the order & use a variable for this
-          '(("Visit site" .
-             (lambda (candidate)
-               (browse-url (alist-get 'url candidate))))
-            ("Copy username" .
-             (lambda (candidate)
-               (let ((username (alist-get 'username candidate)))
-                 (unless (string= "" username)
-                   (kill-new username)
-                   (message "Copied: %s" username)))))
-            ("Copy password" .
-             (lambda (candidate)
-               (let ((password (alist-get 'password candidate)))
-                 (unless (string= "" password)
-                   (kill-new password)
-                   (message "Copied: %s" password)))))
-            ("Copy URL" .
-             (lambda (candidate)
-               (let ((url (alist-get 'url candidate)))
-                 (kill-new url)
-                 (message "Copied: %s" url))))))
+  (helm :sources helm-lastpass-source
         :buffer "*helm LastPass*"))
 
 (provide 'helm-lastpass)
