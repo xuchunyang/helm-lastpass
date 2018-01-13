@@ -71,10 +71,10 @@
 (defun helm-lastpass-export (&optional sync)
   "Return a list of alist which contains all account information."
   (let ((sync (pcase sync
-                ('nil   "--sync=auto")
-                ('auto "--sync=auto")
-                ('now  "--sync=now")
-                ('no   "--sync=no")
+                (`nil   "--sync=auto")
+                (`auto "--sync=auto")
+                (`now  "--sync=now")
+                (`no   "--sync=no")
                 (_     (error "Invalid argument '%s'" sync))))
         (fields (concat
                  "--fields="
