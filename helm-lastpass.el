@@ -27,6 +27,8 @@
 
 (require 'csv)
 (require 'helm)
+(require 'auth-source)
+(require 'cl-lib)
 
 (defgroup helm-lastpass nil
   "Helm interface of LastPass."
@@ -45,6 +47,11 @@
   (zerop (call-process (helm-lastpass-cli) nil nil nil "status")))
 
 (defun helm-lastpass-login (&optional email password)
+  (let ((plist (car (auth-source-search :max 1 :host "lastpass.com"))))
+    (cl-flet ((value (k) (let ((v (plist-get plist k)))
+                           (if (functionp v) (funcall v) v))))
+      (setq email (value :user)
+            password (value :secret))))
   (let* ((email
           (or email (read-string "Email: " user-mail-address)))
          (password
@@ -56,8 +63,9 @@
                   (shell-quote-argument (helm-lastpass-cli))
                   email)))
     (with-temp-buffer
+      (message "helm-lastpass: Logging as %s..." email)
       (if (zerop (call-process-shell-command command nil t nil))
-          (message "Success: Logged in as %s" email)
+          (message "helm-lastpass: Logging as %s...done" email)
         (error "%s" (buffer-string))))))
 
 (defun helm-lastpass-export (&optional sync)
@@ -87,8 +95,11 @@
                               "attachpresent")
                             ","))))
     (with-temp-buffer
+      (message "helm-lastpass: Retrieving data...")
       (if (zerop (call-process (helm-lastpass-cli) nil t nil "export" "--color=never" sync fields))
-          (csv-parse-buffer t)
+          (progn
+            (message "helm-lastpass: Retrieving data...done")
+            (csv-parse-buffer t))
         (error "%s" (buffer-string))))))
 
 ;;;###autoload
@@ -106,6 +117,7 @@
                             item))
                     (helm-lastpass-export)))
           :action
+          ;; TODO Change the order & use a variable for this
           '(("Visit site" .
              (lambda (candidate)
                (browse-url (cdr (assoc "url" candidate)))))
