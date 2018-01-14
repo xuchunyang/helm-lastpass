@@ -50,30 +50,34 @@
   :type '(alist :key-type string :value-type function))
 
 (defun helm-lastpass-copy-password (al)
-  (if-let ((password (alist-get 'password al)))
-      (progn
-        (kill-new password)
-        (message "Copied: %s" password))
+  (let ((password (alist-get 'password al)))
+    (if password
+        (progn
+          (kill-new password)
+          (message "Copied: %s" password)))
     (user-error "No password for this entry")))
 
 (defun helm-lastpass-copy-username (al)
-  (if-let ((username (alist-get 'username al)))
-      (progn
-        (kill-new username)
-        (message "Copied: %s" username))
-    (user-error "No username for this entry")))
+  (let ((username (alist-get 'username al)))
+    (if username
+        (progn
+          (kill-new username)
+          (message "Copied: %s" username))
+      (user-error "No username for this entry"))))
 
 (defun helm-lastpass-copy-url (al)
-  (if-let ((url (alist-get 'url al)))
-      (progn
-        (kill-new url)
-        (message "Copied: %s" url))
-    (user-error "No URL for this entry")))
+  (let ((url (alist-get 'url al)))
+    (if url
+        (progn
+          (kill-new url)
+          (message "Copied: %s" url))
+      (user-error "No URL for this entry"))))
 
 (defun helm-lastpass-browse-url (al)
-  (if-let ((url (alist-get 'url al)))
-      (browse-url url)
-    (user-error "No URL for this entry")))
+  (let ((url (alist-get 'url al)))
+    (if url
+        (browse-url url)
+      (user-error "No URL for this entry"))))
 
 (defun helm-lastpass-cli ()
   (or (executable-find helm-lastpass-cli)
@@ -105,7 +109,8 @@
         (error "%s" (buffer-string))))))
 
 (defun helm-lastpass-export (&optional sync)
-  "Return a list of alist which contains all account information."
+  "Run lpass export subcommand, SYNC is for --sync.
+Return a list of alist which contain all account information."
   (let* ((sync (pcase sync
                  (`nil   "--sync=auto")
                  (`auto "--sync=auto")
