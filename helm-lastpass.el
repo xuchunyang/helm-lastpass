@@ -5,6 +5,7 @@
 ;; Author: Xu Chunyang <mail@xuchunyang.me>
 ;; Homepage: https://github.com/xuchunyang/helm-lastpass
 ;; Package-Requires: ((emacs "25.1") (helm "2.0") (csv "2.1"))
+;; Version: 0
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
