@@ -12,4 +12,4 @@ install:
   - export EMACS=/tmp/emacs/bin/emacs
   - $EMACS --version
 script:
-  - $EMACS --batch -l .straight
+  - make emacs=$EMACS
