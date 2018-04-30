@@ -97,17 +97,18 @@
           (or email (read-string "Email: " user-mail-address)))
          (password
           (or password (read-passwd "Password: ")))
-         (command
-          ;; XXX Is there any better solution?
-          (format "echo -n '%s' | LPASS_DISABLE_PINENTRY=1 %s login --color=never %s"
-                  password
-                  (shell-quote-argument (helm-lastpass-cli))
-                  email)))
+         (infile (make-temp-file "helm-lastpass-password-")))
+    (write-region password nil infile)
     (with-temp-buffer
       (message "helm-lastpass: Logging as %s..." email)
-      (if (zerop (call-process-shell-command command nil t nil))
-          (message "helm-lastpass: Logging as %s...done" email)
-        (error "%s" (buffer-string))))))
+      (let ((process-environment
+             (append
+              '("LPASS_DISABLE_PINENTRY=1")
+              process-environment)))
+        (if (zerop (call-process (helm-lastpass-cli) infile t nil "login" "--color=never" email))
+            (message "helm-lastpass: Logging as %s...done" email)
+          (error "%s" (buffer-string)))))
+    (delete-file infile)))
 
 (defun helm-lastpass-export (&optional sync)
   "Run lpass export subcommand, SYNC is for --sync.
