@@ -41,14 +41,7 @@
   :type 'string
   :group 'helm-lastpass)
 
-;; XXX: Use helm's :action-transformer to set action precisely, for
-;; example, if there is no password, don't show "Copy password".
-(defcustom helm-lastpass-actions
-  '(("Copy password" . helm-lastpass-copy-password)
-    ("Copy username" . helm-lastpass-copy-username)
-    ("Copy Note"     . helm-lastpass-copy-note)
-    ("Copy URL"      . helm-lastpass-copy-url)
-    ("Browse URL"    . helm-lastpass-browse-url))
+(defcustom helm-lastpass-actions nil
   "Actions for `helm-lastpass'."
   :group 'helm-lastpass
   :type '(alist :key-type string :value-type function))
@@ -175,10 +168,25 @@ Return a list of alist which contain all account information."
      (cons (alist-get 'fullname alist) alist))
    (helm-lastpass-export 'no)))
 
+(defun helm-lastpass-action-transformer (actions candidate)
+  (append
+   (delq
+    nil
+    (let-alist candidate
+      (list (and .password '("Copy password" . helm-lastpass-copy-password))
+            (and .username '("Copy username" . helm-lastpass-copy-username))
+            ;; Secure Notes
+            (and .url (string= .url "http://sn")
+                 '("Copy note" . helm-lastpass-copy-note))
+            (and .url (not (string= .url "http://sn"))
+                 '("Browse URL"    . helm-lastpass-browse-url)))))
+   actions))
+
 (defvar helm-lastpass-source
   (helm-build-sync-source "LastPass"
     :candidates #'helm-lastpass-candidates
-    :action helm-lastpass-actions)
+    :action 'helm-lastpass-actions
+    :action-transformer #'helm-lastpass-action-transformer)
   "Source for `helm-lastpass'.")
 
 ;;;###autoload
