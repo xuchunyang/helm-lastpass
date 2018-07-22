@@ -62,25 +62,19 @@
           (message "Copied: %s" .username))
       (message "No username for this entry"))))
 
-(defun helm-lastpass-copy-url (al)
+(defun helm-lastpass-copy-note (al)
   (let-alist al
-    (if .url
+    (if .extra
         (progn
-          (kill-new .url)
-          (message "Copied: %s" .url))
-      (message "No URL for this entry"))))
+          (kill-new .extra)
+          (message "Copied: %s" .extra))
+      (message "No note for this entry"))))
 
 (defun helm-lastpass-browse-url (al)
   (let-alist al
     (if .url
         (browse-url .url)
       (message "No URL for this entry"))))
-
-(defun helm-lastpass-copy-note (al)
-  (let-alist al
-    (if .extra
-        (browse-url .extra)
-      (message "No note for this entry"))))
 
 (defun helm-lastpass-cli ()
   (or (executable-find helm-lastpass-cli)
@@ -173,12 +167,12 @@ Return a list of alist which contain all account information."
    (delq
     nil
     (let-alist candidate
-      (list (and .password '("Copy password" . helm-lastpass-copy-password))
-            (and .username '("Copy username" . helm-lastpass-copy-username))
-            ;; Secure Notes
-            (and .url (string= .url "http://sn")
-                 '("Copy note" . helm-lastpass-copy-note))
-            (and .url (not (string= .url "http://sn"))
+      (list (and .password '("Copy Password" . helm-lastpass-copy-password))
+            (and .username '("Copy Username" . helm-lastpass-copy-username))
+            (and .extra '("Copy Notes" . helm-lastpass-copy-note))
+            (and .url
+                 ;; 'sn' stands for Secure Notes, I guess.
+                 (not (string= .url "http://sn"))
                  '("Browse URL"    . helm-lastpass-browse-url)))))
    actions))
 
