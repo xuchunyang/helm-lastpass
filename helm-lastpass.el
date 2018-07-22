@@ -55,8 +55,8 @@
     (if password
         (progn
           (kill-new password)
-          (message "Copied: %s" password)))
-    (user-error "No password for this entry")))
+          (message "Copied: %s" password))
+      (user-error "No password for this entry"))))
 
 (defun helm-lastpass-copy-username (al)
   (let ((username (alist-get 'username al)))
