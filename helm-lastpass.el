@@ -173,7 +173,7 @@ Return a list of alist which contain all account information."
   (mapcar
    (lambda (alist)
      (cons (alist-get 'fullname alist) alist))
-   (helm-lastpass-export)))
+   (helm-lastpass-export 'no)))
 
 (defvar helm-lastpass-source
   (helm-build-sync-source "LastPass"
