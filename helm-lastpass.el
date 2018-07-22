@@ -51,34 +51,34 @@
   :type '(alist :key-type string :value-type function))
 
 (defun helm-lastpass-copy-password (al)
-  (let ((password (alist-get 'password al)))
-    (if password
+  (let-alist al
+    (if .password
         (progn
-          (kill-new password)
-          (message "Copied: %s" password))
-      (user-error "No password for this entry"))))
+          (kill-new .password)
+          (message "Copied: %s" .password))
+      (message "No password for this entry"))))
 
 (defun helm-lastpass-copy-username (al)
-  (let ((username (alist-get 'username al)))
-    (if username
+  (let-alist al
+    (if .username
         (progn
-          (kill-new username)
-          (message "Copied: %s" username))
-      (user-error "No username for this entry"))))
+          (kill-new .username)
+          (message "Copied: %s" .username))
+      (message "No username for this entry"))))
 
 (defun helm-lastpass-copy-url (al)
-  (let ((url (alist-get 'url al)))
-    (if url
+  (let-alist al
+    (if .url
         (progn
-          (kill-new url)
-          (message "Copied: %s" url))
-      (user-error "No URL for this entry"))))
+          (kill-new .url)
+          (message "Copied: %s" .url))
+      (message "No URL for this entry"))))
 
 (defun helm-lastpass-browse-url (al)
-  (let ((url (alist-get 'url al)))
-    (if url
-        (browse-url url)
-      (user-error "No URL for this entry"))))
+  (let-alist al
+    (if .url
+        (browse-url .url)
+      (message "No URL for this entry"))))
 
 (defun helm-lastpass-cli ()
   (or (executable-find helm-lastpass-cli)
