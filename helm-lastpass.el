@@ -41,9 +41,12 @@
   :type 'string
   :group 'helm-lastpass)
 
+;; XXX: Use helm's :action-transformer to set action precisely, for
+;; example, if there is no password, don't show "Copy password".
 (defcustom helm-lastpass-actions
   '(("Copy password" . helm-lastpass-copy-password)
     ("Copy username" . helm-lastpass-copy-username)
+    ("Copy Note"     . helm-lastpass-copy-note)
     ("Copy URL"      . helm-lastpass-copy-url)
     ("Browse URL"    . helm-lastpass-browse-url))
   "Actions for `helm-lastpass'."
@@ -79,6 +82,12 @@
     (if .url
         (browse-url .url)
       (message "No URL for this entry"))))
+
+(defun helm-lastpass-copy-note (al)
+  (let-alist al
+    (if .extra
+        (browse-url .extra)
+      (message "No note for this entry"))))
 
 (defun helm-lastpass-cli ()
   (or (executable-find helm-lastpass-cli)
